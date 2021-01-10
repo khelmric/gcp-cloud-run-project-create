@@ -116,3 +116,21 @@
     fi
   done  
 
+# check if cloud run service is enabled
+  until [[ "${STATE}" == "ENABLED" ]] ; do
+    STATE=`gcloud services list --format="get(state)" --filter="config.name:run.googleapis.com" --project ${PROJECT_ID}`
+    if [[ "${STATE}" == "ENABLED" ]] ; then
+      echo -e "[ ${COL_OK}OK${COL_DEFAULT} ] - Cloud Run service is enabled."
+    else
+      echo -e "[ ${COL_WARN}WARNING${COL_DEFAULT} ] - Cloud Run service is not enabled. Enabling..."
+      gcloud services enable run.googleapis.com --project ${PROJECT_ID} > /dev/null
+      if [[ $? != 0 ]] ; then
+        echo -e "[ ${COL_ERR}ERROR${COL_DEFAULT} ] - Failed to enabling Cloud Run service. Please check your IAM permissions."
+        exit 1
+      fi
+    fi
+  done 
+
+# create cloud run service
+  #todo: define service account, build image
+  gcloud run deploy cloud-run-name-here --region us-west1 --no-allow-unauthenticated --image https://github.com/khelmric/gcp-cloud-run-project-create.git:latest --platform managed --project create-project-with-cloud-run
